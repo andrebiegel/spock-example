@@ -8,7 +8,7 @@ import com.zaxxer.hikari.HikariDataSource
 class TestContainersDatabaseTest extends Specification {
 
     @Shared
-    PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer()
+    PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:10.10")
             .withDatabaseName("foo")
             .withUsername("foo")
             .withPassword("secret")
