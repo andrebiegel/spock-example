@@ -104,28 +104,24 @@
       <artifactId>h2</artifactId>
       <version>1.4.197</version>
     </dependency>
+    <!--testcontainers-->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>spock</artifactId>
+      <version>1.12.3</version>
+      <scope>test</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>1.12.3</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+  <groupId>com.zaxxer</groupId>
+  <artifactId>HikariCP</artifactId>
+  <version>3.3.1</version>
+  <scope>test</scope>
+</dependency>
   </dependencies>
-
-  <repositories>
-    <!-- Only required if a snapshot version of Spock is used -->
-    <repository>
-      <id>spock-snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
-  <!-- Only required in spock-example build -->
-  <distributionManagement>
-    <repository>
-      <id>foo</id>
-      <url>file:///fake.repository.to.make.maven.happy</url>
-    </repository>
-    <snapshotRepository>
-      <id>bar</id>
-      <url>file:///fake.repository.to.make.maven.happy</url>
-    </snapshotRepository>
-  </distributionManagement>
 </project>
