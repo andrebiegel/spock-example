@@ -1,0 +1,128 @@
+<%
+println "entering spec-template"
+def fmt
+def stats = utils.stats( data )
+fmt = new com.athaydes.spockframework.report.internal.StringFormatHelper()
+def config = com.aoe.gebspockreports.GebReportConfigLoader.instance.config
+def gebUtils = new com.aoe.gebspockreports.GebReportUtils()
+def gebReport = gebUtils.readGebReport()
+def specReport = gebReport.findSpecByLabel(utils.getSpecClassName(data))
+println "parsed gebReport"
+%>
+== Bericht für ${data?.info?.description?.className}
+
+=== Zusammenfassung
+[options="header",cols="asciidoc,asciidoc"]
+|====
+|Gesamtdurchläufe        |Erfolgsquote 													 |Gesamtzeit												|Fehlschläge					 |Fehler					|Ausgelassen
+|${stats.totalRuns}|${fmt.toPercentage(stats.successRate)} |${fmt.toTimeDuration(stats.time)} |${stats.failures} |${stats.errors} |${stats.skipped}
+|====
+
+=== Features
+<%
+    def featureCount = 0
+    features.eachFeature { name, result, blocks, iterations, params ->
+%>
+==== $name
+
+=====
+
+<% 
+def failedIterations = iterations.findAll { it.dataValues || it.errors }
+def problems = iterations.findAll { it.errors }
+def isFailure = result in ['FAIL', 'FAILURE']
+def isError = result == 'ERROR'
+def isIgnored = result == 'IGNORED'
+def cssClass = isIgnored ? 'ignored' : (isError ? 'error' : (isFailure ? 'failure' : ''))
+
+featureCount += isIgnored ? 0 : 1
+def gebFeatureReport = specReport?.findFeatureByNumberAndName(featureCount, name)
+def gebArtifacts = gebFeatureReport?.artifacts
+%>
+
+Resultat: **$result** [big]#<% if (result=="PASS") { %>icon:check-circle[role="green"]<% } else { %>icon:exclamation-triangle[role="red"]<% } %>#
+<%
+        def translations = ['Given:':'Gegeben:','When:':'Wenn','And:':'und','Then:':'dann']
+        def num = 0
+        for ( block in blocks ) {
+ %>
+* **${translations[block.kind]?:block.kind}** ${block.text}
+<%
+//fetch screenshots
+    def numCols = 0
+    def screenshots = []
+    gebArtifacts.each {
+    def imageUrl = "./" + it.files.find { it.endsWith('png') }
+    def pageUrl = "./" + it.files.find { it.endsWith('html') }
+     //imageUrl = imageUrl.replaceAll(' ','%20')
+    // pageUrl  =  pageUrl.replaceAll(' ','%20')
+     //omit auto-generated end-screenshots
+     if (!(imageUrl.endsWith('-end.png'))) {
+     	numCols++
+        screenshots << """image:${imageUrl}[width="95%", link="${imageUrl}"]
+link:${pageUrl}[.]"""
+     }
+    }
+
+//output testcode along with screenshots
+    def needsScreenshot = false
+          if ( block.sourceCode ) {
+            out << "\n[cols=\"2,1\"]\n|====\n"
+            out << "\na|[source,groovy,linenums]\n----\n"
+            block.sourceCode.each { codeLine ->
+                out << codeLine
+                out << "\n"
+                if (codeLine ==~ /[\t ]*report.*/) {
+                    needsScreenshot = true
+                }
+            }
+            out << "----\n\n"
+            if (needsScreenshot) {
+                out << "a| " << screenshots[num++] <<"\n"
+            } else {
+                out << "| \n"
+            }
+            out << "|====\n"
+            
+          }
+        }
+        def executedIterations = iterations.findAll { it.dataValues || it.errors }
+        if ( params && executedIterations && executedIterations.size() > 1 ) {
+ %>
+
+[options="header"]
+|====
+| ${params.join( ' | ' )} | Resultat
+<%
+            for ( iteration in executedIterations ) {
+
+%>| ${iteration.dataValues.join( ' | ' )} | ${iteration.errors ? 'icon:exclamation-triangle[role="red"]FAIL' : 'icon:check-circle-o[role="green"]PASS'}
+<%          }
+%>|====
+<%      }
+
+        
+        if ( problems ) {
+            out << """
+[WARNING]
+.Die folgenden Probleme traten auf:
+====
+"""
+            for ( badIteration in problems ) {
+                if ( badIteration.dataValues ) {
+                    out << '* ' << badIteration.dataValues << '\n'
+                }
+                for ( error in badIteration.errors ) {
+                    out << '----\n' << error << '\n----\n'
+                }
+            }
+            out << """
+====
+"""
+        }
+
+out << """
+=====
+"""        
+    }
+ %>

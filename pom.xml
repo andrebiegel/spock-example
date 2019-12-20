@@ -10,6 +10,10 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <asciidoctorj.pdf.version>1.5.0-beta.6</asciidoctorj.pdf.version>
+    <asciidoctor.maven.plugin.version>2.0.0-RC.1</asciidoctor.maven.plugin.version>
+    <asciidoctorj.version>2.1.0</asciidoctorj.version>
+    <jruby.version>9.2.8.0</jruby.version>
   </properties>
 
   <build>
@@ -53,8 +57,61 @@
             <version>2.22.0</version>
           </dependency>
         </dependencies>
-      </plugin> 
-   </plugins>
+      </plugin>
+      <plugin>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctor-maven-plugin</artifactId>
+        <version>${asciidoctor.maven.plugin.version}</version>
+        <configuration>
+          <sourceDirectory>${basedir}/target/geb-spock-reports</sourceDirectory>
+          <imagesDir>.</imagesDir>
+          <backend>pdf</backend>
+          <!-- Since 1.5.0-alpha.9 PDF back-end can use 'rouge' as well as 'coderay'
+          for source highlighting -->
+          <!-- Due to a known issue on windows, it is recommended to use 'coderay' until an new version of 'rouge' is released.
+                  see discussions: https://github.com/asciidoctor/asciidoctor-maven-examples/pull/58
+                                   https://github.com/asciidoctor/asciidoctorj-pdf/issues/3
+                                   https://github.com/jneen/rouge/issues/661
+          -->
+          <sourceHighlighter>coderay</sourceHighlighter>
+          <attributes>
+              <icons>font</icons>
+              <pagenums/>
+              <toc/>
+              <idprefix/>
+              <idseparator>-</idseparator>
+          </attributes>
+      </configuration> 
+        <executions>
+          <execution>
+              <id>output-pdf</id>              
+              <phase>package</phase> 
+              <goals>
+                  <goal>process-asciidoc</goal> 
+              </goals>
+          </execution>
+      </executions>
+      <dependencies>
+        <dependency>
+            <groupId>org.asciidoctor</groupId>
+            <artifactId>asciidoctorj-pdf</artifactId>
+            <version>${asciidoctorj.pdf.version}</version>
+        </dependency>
+        <!-- Comment this section to use the default jruby artifact provided by the plugin -->
+        <dependency>
+            <groupId>org.jruby</groupId>
+            <artifactId>jruby-complete</artifactId>
+            <version>${jruby.version}</version>
+        </dependency>
+        <!-- Comment this section to use the default AsciidoctorJ artifact provided by the plugin -->
+        <dependency>
+            <groupId>org.asciidoctor</groupId>
+            <artifactId>asciidoctorj</artifactId>
+            <version>${asciidoctorj.version}</version>
+        </dependency>
+    </dependencies>
+    </plugin>
+    </plugins>
   </build>
 
   <dependencies>
@@ -122,5 +179,51 @@
       <version>3.141.59</version>
       <scope>test</scope>
     </dependency>
+    <!---reporting -->
+    <dependency>
+      <groupId>com.aoe</groupId>
+      <artifactId>geb-spock-reports</artifactId>
+      <version>0.2.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.13</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/com.athaydes/spock-reports -->
+    <dependency>
+      <groupId>com.athaydes</groupId>
+      <artifactId>spock-reports</artifactId>
+      <version>1.6.2</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
+  <repositories>
+    <repository>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>central</id>
+      <name>bintray</name>
+      <url>http://jcenter.bintray.com</url>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>central</id>
+      <name>bintray-plugins</name>
+      <url>http://jcenter.bintray.com</url>
+    </pluginRepository>
+  </pluginRepositories>
 </project>
